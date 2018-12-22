@@ -96,7 +96,7 @@ def generate_metadata(rgb_file_path, depth_file_path, labels_file_path, save_loc
     total_pixel_count = np.sum(list(class_count.values()))
     class_prob = {key: class_count[key]/float(total_pixel_count) \
                     for key in class_count}
-    prob_median = np.median(class_prod.values())
+    prob_median = np.median(list(class_prod.values()))
     med_freq = {key: prob_median/float(class_prob[key]) for key in class_prob}
     # get num_classes
     num_classes = len(class_count)
