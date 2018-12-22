@@ -61,14 +61,14 @@ def npy_to_labels(flist, save_loc):
         img_loc.append(img_filepath)
     return img_loc
 
-def generate_metadata(rgb_file_path, depth_filepath, labels_filepath, save_loc):
+def generate_metadata(rgb_file_path, depth_file_path, labels_file_path, save_loc):
     """ Generate a json file containing the image dimensions, the number of
         classes and the med class frequency, and colours for every single class
         all saved in a json file in the desired save_location.
     Inputs:
         rgb_filepath (str): path to training rgb images
-        depth_filepath (str): path to training depth images
-        labels_filepath (str): path to training labels
+        depth_file_path (str): path to training depth images
+        labels_file_path (str): path to training labels
         save_loc (str): save location path
     """
     # calculate dimensions of images
