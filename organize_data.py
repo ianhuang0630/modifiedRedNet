@@ -2,6 +2,9 @@ import os
 from scipy.misc import imread, imsave
 import numpy as np
 from tqdm import tqdm
+import random
+import json
+
 
 def npy_to_depth(flist, save_loc):
     # generates a png and saves into predesignated location 
@@ -58,6 +61,63 @@ def npy_to_labels(flist, save_loc):
         img_loc.append(img_filepath)
     return img_loc
 
+# TODO: generate metadata
+def generate_metadata(rgb_file_path, depth_filepath, labels_filepath, save_loc):
+    """ Generate a json file containing the image dimensions, the number of
+        classes and the med class frequency, and colours for every single class
+        all saved in a json file in the desired save_location.
+    Inputs:
+        rgb_filepath (str): path to training rgb images
+        depth_filepath (str): path to training depth images
+        labels_filepath (str): path to training labels
+        save_loc (str): save location path
+    """
+    # calculate dimensions of images
+    # To maximize efficiency, the function assumes that images are of the same
+    # dimension
+    with open(train_rgb_filepath, mode='r') as f:
+        image_path = f.readline()
+        trial_image = imread(image_path)
+        assert isinstance(trial_image, np.ndarray), \
+                'image should be loaded as np array'
+        dimensions = trial_image.shape
+
+    # number of classes
+    class_count = {}
+    with open(labels_file_path, mode='r') as f:
+        for line in tqdm(f):
+            # load the labels
+            assert '.npy' in line, 'the labels should be stored in .npy'
+            labels = np.load(line).flatten()
+            for element in labels:
+                if element not in class_count:
+                    class_count[element] = 1
+                else:
+                    class_count[element] += 1
+    total_pixel_count = np.sum(class_count.values())
+    class_prob = {key: class_count[key]/float(total_pixel_count) \
+                    for key in class_count}
+    prob_median = np.median(class_prod.values())
+    med_freq = {key: prob_median/float(class_prob[key]) for key in class_prob}
+    # get num_classes
+    num_classes = len(class_count)
+    # generate random colours, add on the original
+    colours = [(0,0,0)]
+    for i in range(num_classes):
+        colours.append(
+            (random.randint(low, high), random.randint(low, high), 
+                random.randint(low, high)))
+    assert len(colours) == num_classes + 1
+    
+    json_dict = {'height': dimensions[0], 'width': dimensions[1], 
+                'colours': colours, 'med_freq': med_freq, 
+                'num_classes': len(class_count), 'class_prob': class_prob}
+    
+    with open(save_loc, 'w') as f:
+        f.dump(json_dict, f)
+    
+    return json_dict
+
 
 if __name__=='__main__':
     data_dir = 'data/minos_data/minos_training_data'
@@ -69,11 +129,13 @@ if __name__=='__main__':
     train_rgb_filepath = 'data/minos_data/img_dir_train.txt'
     train_depth_filepath = 'data/minos_data/depth_dir_train.txt'
     train_labels_filepath = 'data/minos_data/label_train.txt'
-    
+    train_meta_filepath = 'data/minos_data/meta_train.json'
+
     test_rgb_filepath = 'data/minos_data/img_dir_test.txt'
     test_depth_filepath = 'data/minos_data/depth_dir_test.txt'
     test_labels_filepath = 'data/minos_data/label_test.txt'
-    
+    test_meta_filepath = 'data/minos_data/meta_test.json'
+
     rgb_npy_path = []
     depth_npy_path = []
     label_npy_path = []
@@ -129,5 +191,9 @@ if __name__=='__main__':
         paths = labels_img_path[test_idx]
         f.writelines(["%s \n" % item for item in paths])
     
+    # generate the metadata files
+    generate_metadata(train_rgb_filepath, train_depth_filepath, 
+                    train_labels_filepath, train_meta_filepath)
+    generate_metadata(test_rgb_filepath, test_depth_filepath, 
+                    test_labels_filepath, test_meta_filepath)
 
-   
