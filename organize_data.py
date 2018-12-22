@@ -61,8 +61,7 @@ def npy_to_labels(flist, save_loc):
         img_loc.append(img_filepath)
     return img_loc
 
-def generate_metadata(rgb_file_path, depth_file_path, labels_file_path, save_loc,
-        low=100, high=255):
+def generate_metadata(rgb_file_path, depth_file_path, labels_file_path, save_loc):
     """ Generate a json file containing the image dimensions, the number of
         classes and the med class frequency, and colours for every single class
         all saved in a json file in the desired save_location.
@@ -97,8 +96,9 @@ def generate_metadata(rgb_file_path, depth_file_path, labels_file_path, save_loc
     total_pixel_count = np.sum(list(class_count.values()))
     class_prob = {key: class_count[key]/float(total_pixel_count) \
                     for key in class_count}
-    prob_median = np.median(list(class_prob.values()))
+    prob_median = np.median(list(class_prod.values()))
     med_freq = {key: prob_median/float(class_prob[key]) for key in class_prob}
+    med_freq_list = [x for _,x in sorted(zip(list(med_freq.keys()), list(med_freq.values())))]
     # get num_classes
     num_classes = len(class_count)
     # generate random colours, add on the original
@@ -110,7 +110,7 @@ def generate_metadata(rgb_file_path, depth_file_path, labels_file_path, save_loc
     assert len(colours) == num_classes + 1
     
     json_dict = {'height': dimensions[0], 'width': dimensions[1], 
-                'colours': colours, 'med_freq': med_freq, 
+                'colours': colours, 'med_freq': med_freq_list, 
                 'num_classes': len(class_count), 'class_prob': class_prob}
     
     with open(save_loc, 'w') as f:
