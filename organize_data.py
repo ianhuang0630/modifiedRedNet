@@ -61,7 +61,8 @@ def npy_to_labels(flist, save_loc):
         img_loc.append(img_filepath)
     return img_loc
 
-def generate_metadata(rgb_file_path, depth_file_path, labels_file_path, save_loc):
+def generate_metadata(rgb_file_path, depth_file_path, labels_file_path, save_loc,
+        low=100, high=255):
     """ Generate a json file containing the image dimensions, the number of
         classes and the med class frequency, and colours for every single class
         all saved in a json file in the desired save_location.
@@ -96,7 +97,7 @@ def generate_metadata(rgb_file_path, depth_file_path, labels_file_path, save_loc
     total_pixel_count = np.sum(list(class_count.values()))
     class_prob = {key: class_count[key]/float(total_pixel_count) \
                     for key in class_count}
-    prob_median = np.median(list(class_prod.values()))
+    prob_median = np.median(list(class_prob.values()))
     med_freq = {key: prob_median/float(class_prob[key]) for key in class_prob}
     # get num_classes
     num_classes = len(class_count)
@@ -113,7 +114,7 @@ def generate_metadata(rgb_file_path, depth_file_path, labels_file_path, save_loc
                 'num_classes': len(class_count), 'class_prob': class_prob}
     
     with open(save_loc, 'w') as f:
-        f.dump(json_dict, f)
+        json.dump(json_dict, f)
     
     return json_dict
 
