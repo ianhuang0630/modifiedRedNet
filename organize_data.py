@@ -93,7 +93,7 @@ def generate_metadata(rgb_file_path, depth_file_path, labels_file_path, save_loc
                     class_count[element] = 1
                 else:
                     class_count[element] += 1
-    total_pixel_count = np.sum(class_count.values())
+    total_pixel_count = np.sum(list(class_count.values()))
     class_prob = {key: class_count[key]/float(total_pixel_count) \
                     for key in class_count}
     prob_median = np.median(class_prod.values())
