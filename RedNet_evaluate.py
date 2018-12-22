@@ -79,7 +79,6 @@ def evaluate():
     model.to(device)
     
     # making the loss calculator
-    # TODO: input dataset-specific med_frq
     CEL_weighted = utils.CrossEntropyLoss2d(weight=med_freq)
     CEL_weighted.to(device)
 
@@ -105,7 +104,6 @@ def evaluate():
     
     CELs = []
 
-    # TODO: batch evaluate, then return the metric 
     for i in tqdm(range(len(rgb_test))):
         # iterate through every image in a directory
         this_rgb = rgb_test[i].strip()

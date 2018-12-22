@@ -118,8 +118,7 @@ def inference():
         depth = depth.to(device).unsqueeze_(0)
 
         pred = model(image, depth)
-        # TODO: input dataset-unique color_labels
-        output = utils.color_label(torch.max(pred, 1)[1] + 1)[0]
+        output = utils.color_label(torch.max(pred, 1)[1] + 1, label_colours=colours)[0]
         
         base = os.path.basename(this_label)
         base = base[:-4] + '.png'
