@@ -2,6 +2,7 @@ import argparse
 import os
 import time
 import torch
+import json
 
 from torch.utils.data import DataLoader
 import torch.optim
@@ -54,19 +55,27 @@ parser.add_argument('--summary-dir', default='./summary', metavar='DIR',
                     help='path to save summary')
 parser.add_argument('--checkpoint', action='store_true', default=False,
                     help='Using Pytorch checkpoint or not')
+parser.add_argument('--metadatajson', default='meta_train.json', type=str,
+                    help='metadata location.')
 
 args = parser.parse_args()
 device = torch.device("cuda:0" if args.cuda and torch.cuda.is_available() else "cpu")
-# image_w = 640
-# image_h = 480
-# NUM_CLASSES = 44# added for minos 
-
-# TODO 
-image_w = 256
-image_h = 256 
-NUM_CLASSES = 253 # added for minos 
 
 def train():
+    print('loading metadata')
+    if os.path.exists(os.path.join(args.data_dir, args.metadatajson)):
+        metadata = json.load(open(os.path.join(args.data_dir, args.metadatajson)))
+        # loading relevant variables 
+        image_w = metadata['width']
+        image_h = metadata['height']
+        NUM_CLASSES = metadata['num_classes']
+        colours = metadata['colours']
+        med_freq = metadata['med_freq']
+
+    else:
+        raise IOError ("could not find metadata parameters. Make sure to create the file before training.")
+
+
     print("loading data...") # ian
     train_data = RedNet_data.SUNRGBD(transform=transforms.Compose([RedNet_data.scaleNorm(),
                                                                    RedNet_data.RandomScale((1.0, 1.4)),
@@ -97,7 +106,8 @@ def train():
     if torch.cuda.device_count() > 1:
         print("Let's use", torch.cuda.device_count(), "GPUs!")
         model = nn.DataParallel(model)
-    CEL_weighted = utils.CrossEntropyLoss2d()
+
+    CEL_weighted = utils.CrossEntropyLoss2d(weight=med_freq)
     model.train()
     model.to(device)
     CEL_weighted.to(device)
@@ -150,10 +160,15 @@ def train():
                 writer.add_image('image', grid_image, global_step)
                 grid_image = make_grid(depth[:3].clone().cpu().data, 3, normalize=True)
                 writer.add_image('depth', grid_image, global_step)
-                grid_image = make_grid(utils.color_label(torch.max(pred_scales[0][:3], 1)[1] + 1), 3, normalize=False,
+
+                grid_image = make_grid(utils.color_label(
+                                        torch.max(pred_scales[0][:3], 1)[1] + 1, 
+                                        label_colours=colours), 3, normalize=False,
                                        range=(0, 255))
                 writer.add_image('Predicted label', grid_image, global_step)
-                grid_image = make_grid(utils.color_label(target_scales[0][:3]), 3, normalize=False, range=(0, 255))
+                grid_image = make_grid(utils.color_label(target_scales[0][:3],
+                                            label_colours=colours), 
+                                            3, normalize=False, range=(0, 255))
                 writer.add_image('Groundtruth label', grid_image, global_step)
                 writer.add_scalar('CrossEntropyLoss', loss.data, global_step=global_step)
                 writer.add_scalar('Learning rate', scheduler.get_lr()[0], global_step=global_step)
@@ -169,5 +184,5 @@ if __name__ == '__main__':
         os.mkdir(args.ckpt_dir)
     if not os.path.exists(args.summary_dir):
         os.mkdir(args.summary_dir)
-
+    
     train()

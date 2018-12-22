@@ -27,6 +27,13 @@ parser.add_argument('--path_depth_test',
 parser.add_argument('--path_labels_test',
                     default='data/gibson_data/label_test.txt',
                     help='path to labels testfile')
+parser.add_argument('--path_metadata_train',
+                    default='data/gibson_data/meta_train.json',
+                    help='path to train metadata json')
+parser.add_argument('--path_metadata_train',
+                    default='data/gibson_data/meta_test.json',
+                    help='path to test metadata json')
+
 
 # parser.add_argument('-r', '--rgb', default=None, metavar='DIR',
 #                     help='path to image')
@@ -45,19 +52,35 @@ device = torch.device("cuda:0" if args.cuda and torch.cuda.is_available() else "
 # image_w = 640
 # image_h = 480
 
-image_w = 256
-image_h = 256
-
 def evaluate():
+    print('loading metadata')
+    if os.path.exists(args.path_metadata_train):
+        meta_train = json.load(open(args.path_metadata_train))
+        # load number of classes
+        num_classes = meta_train['num_classes']
+        image_w = meta_train['width'] 
+        image_h = meta_train['height']
+        colours = meta_train['colours']
+    else:
+        raise IOError (
+        "could not find metadata parameters. Make sure to create the file before training.")
+
+    if os.path.exists(args.path_metadata_test):
+        meta_test = json.load(open(args.path_metadata_test))
+        med_freq = meta_test['med_freq']
+    else:
+        raise IOError ("could not find metadata parameters. Make sure to create the file before training.")
+
 
     # model = RedNet_model.RedNet(num_classes=44, pretrained=False)
-    model = RedNet_model.RedNet(num_classes=253, pretrained=False)
+    model = RedNet_model.RedNet(num_classes=num_classes, pretrained=False)
     load_ckpt(model, None, args.last_ckpt, device)
     model.eval()
     model.to(device)
     
     # making the loss calculator
-    CEL_weighted = utils.CrossEntropyLoss2d()
+    # TODO: input dataset-specific med_frq
+    CEL_weighted = utils.CrossEntropyLoss2d(weight=med_freq)
     CEL_weighted.to(device)
 
     rgb_test = []
@@ -120,7 +143,7 @@ def evaluate():
         loss = CEL_weighted([pred], [ground_truth])
         CELs.append(loss.data)
 
-        output = utils.color_label(torch.max(pred, 1)[1] + 1)[0]
+        output = utils.color_label(torch.max(pred, 1)[1] + 1, label_colours=colours)[0]
         
         base = os.path.basename(this_label)
         base = base[:-4] + '.png'
