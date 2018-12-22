@@ -1,14 +1,8 @@
-# RedNet
-
-This repository contains the official implementation of the RedNet (Residual Encoder-Decoder Architecture). It turns out that the simple encoder-decoder structure is powerful when combined with residual learning. For further details of the network, please refer to our article [RedNet: Residual Encoder-Decoder Network for indoor RGB-D Semantic Segmentation](http://bit.ly/2MrIT78).
-
-![alt text](figure/overall_structure.png  "Overall structure of RedNet")
-
-<!-- <img src="overall_structure.png" width=80% title="Overall structure of RedNet" /> -->
+This README contains a lot of information from the [original RedNet repository](https://github.com/JindongJiang/RedNet). 
 
 ## Dependencies:
 
-PyTorch 0.4.0, TensorboardX 1.2 and other packages listed in `requirements.txt`.
+PyTorch 0.4.0, TensorboardX 1.2 and other packages listed in `requirements.txt`. Additionally, tqdm is also used and can be installed using `pip install tqdm`.
 
 ## Dataset
 
@@ -39,17 +33,6 @@ python RedNet_inference.py --cuda --last-ckpt /path/to/pretrained/model.pth -r /
 ```
 
 The pre-trained weight is released [here](http://bit.ly/2KDLeu9) for result reproduction.
-
-## Citation
-
-If you find this work to be helpful, please consider citing the paper,
-
-    @article{jiang2018rednet,
-      title={RedNet: Residual Encoder-Decoder Network for indoor RGB-D Semantic Segmentation},
-      author={Jiang, Jindong and Zheng, Lunan and Luo, Fei and Zhang, Zhijun},
-      journal={arXiv preprint arXiv:1806.01054},
-      year={2018}
-    }
 
 ## License
 
