@@ -61,7 +61,6 @@ def npy_to_labels(flist, save_loc):
         img_loc.append(img_filepath)
     return img_loc
 
-# TODO: generate metadata
 def generate_metadata(rgb_file_path, depth_filepath, labels_filepath, save_loc):
     """ Generate a json file containing the image dimensions, the number of
         classes and the med class frequency, and colours for every single class
@@ -76,7 +75,7 @@ def generate_metadata(rgb_file_path, depth_filepath, labels_filepath, save_loc):
     # To maximize efficiency, the function assumes that images are of the same
     # dimension
     with open(train_rgb_filepath, mode='r') as f:
-        image_path = f.readline()
+        image_path = f.readline().strip()
         trial_image = imread(image_path)
         assert isinstance(trial_image, np.ndarray), \
                 'image should be loaded as np array'
@@ -88,7 +87,7 @@ def generate_metadata(rgb_file_path, depth_filepath, labels_filepath, save_loc):
         for line in tqdm(f):
             # load the labels
             assert '.npy' in line, 'the labels should be stored in .npy'
-            labels = np.load(line).flatten()
+            labels = np.load(line.strip()).flatten()
             for element in labels:
                 if element not in class_count:
                     class_count[element] = 1
